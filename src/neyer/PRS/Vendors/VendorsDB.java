@@ -129,15 +129,15 @@ public class VendorsDB implements VendorsDAO {
 	
 	public void updateVendor(Vendors vendor) throws DBException{
 		String sql = "UPDATE Vendors SET " 
-				+ "Name = ? "
-				+ "Address = ? "
-				+ "City = ? "
-				+ "State = ? "
-				+ "ZipCode = ? "
-				+ "Phone = ? "
-				+ "Email = ? "
+				+ "Name = ?, "
+				+ "Address = ?, "
+				+ "City = ?, "
+				+ "State = ?, "
+				+ "ZipCode = ?, "
+				+ "Phone = ?, "
+				+ "Email = ?, "
 				+ "Preapproved = ? " 
-				+ "Where Code = ?";
+				+ "Where Code = ?;";
 		connection = DBUtil.getConnection();
 		try (PreparedStatement ps = connection.prepareStatement(sql)) {
 			ps.setString(9, vendor.getCode());

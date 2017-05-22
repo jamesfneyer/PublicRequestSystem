@@ -32,20 +32,21 @@ public class MainPagePresentation {
 		requestsDB = DAOFactory.getRequestsDAO();
 		productsDB = DAOFactory.getProductsDAO();
 		usersDB = DAOFactory.getUsersDAO();
-		String choice = "";
 //		viewUsers();
 
-		String username = Validator.getString(sc, "Username: ");
-		String password = Validator.getString(sc, "Password: ");
-		Users u = isValidUsername(username, password);
+		Users u = isValidUsername();
+		System.out.println(usersDB.getUsersFullname(u.getID()));
 		System.out.println(u.getRole());
 		if(u != null){
-		if(u.getRole().equals("Employee"))
+		if(u.getRoleID() == 1){
 			employeeFunctions(u);
-		else if(u.getRole().equals("Manager"))
+		}
+		else if(u.getRoleID() == 2){
 			managerFunctions(u);
-		else if(u.getRole().equals("Administrator"))
+		}
+		else if(u.getRoleID() == 3){
 			adminFunctions(u);
+		}
 		}
 		
 
@@ -55,7 +56,7 @@ public class MainPagePresentation {
 		viewManagerMenu();
 		String choice = Validator.getString(sc, "Enter function: ");
 		if(choice.equalsIgnoreCase("view"))
-			viewRequests(u);
+			viewRequests(u, true);
 		else if(choice.equalsIgnoreCase("manage"))
 			manageRequest(u);
 		else if(choice.equals("help"))
@@ -154,19 +155,8 @@ public class MainPagePresentation {
 	private static void updateVendor(Users u) {
 		Vendors vendor = new Vendors();
 		try {
-			boolean isValid = true;
 			String code = "";
-			ArrayList<Vendors> vendors = vendorsDB.getAllVendors();
-			while (isValid == false) {
-				code = Validator.getString(sc, "Enter code: ");
-				for (Vendors v : vendors) {
-					if (code.equalsIgnoreCase(v.getCode())) {
-						isValid = true;
-					}
-				}
-				if (isValid == false)
-					System.out.println("Error! No vendor by that name.");
-			}
+			vendor = selectVendor();
 			String name = Validator.getLine(sc, "Enter Name: ");
 			String address = Validator.getLine(sc, "Enter Address: ");
 			String city = Validator.getString(sc, "Enter City: ");
@@ -187,8 +177,10 @@ public class MainPagePresentation {
 			vendor.setEmail(email);
 			vendor.setState(state);
 			vendor.setZipCode(zipCode);
+			vendor.setPhone(phone);
 			vendor.setPreapproved(preapproved);
 			vendorsDB.updateVendor(vendor);
+			adminFunctions(u);
 
 		} catch (DBException e) {
 			e.printStackTrace();
@@ -204,11 +196,11 @@ public class MainPagePresentation {
 			vendorProducts(v);
 		} else if (choice.equalsIgnoreCase("add")) {
 			Vendors v = selectVendor();
-			addProduct(v);
+			addProduct(v,u);
 		} else if (choice.equalsIgnoreCase("update")) {
 			Vendors v = selectVendor();
 			Products p = selectProduct(v);
-			updateProduct(p, v);
+			updateProduct(p, v,u);
 		} else if (choice.equals("help"))
 			productFunctions();
 		else if (choice.equalsIgnoreCase("back"))
@@ -219,7 +211,7 @@ public class MainPagePresentation {
 		}
 	}
 
-	private static void updateProduct(Products p, Vendors v) {
+	private static void updateProduct(Products p, Vendors v, Users u) {
 		Products product = p;
 		try{
 			String name = Validator.getString(sc, "Enter name: ", 10);
@@ -233,6 +225,7 @@ public class MainPagePresentation {
 			product.setPhotoPath(photoPath);
 			product.setVendorID(vendorID);
 			productsDB.updateProduct(product);
+			adminFunctions(u);
 			
 		} catch (DBException e) {
 			e.printStackTrace();
@@ -240,14 +233,14 @@ public class MainPagePresentation {
 		
 	}
 
-	private static void addProduct(Vendors v) {
+	private static void addProduct(Vendors v, Users u) {
 		Products product = new Products();
 		try{
 			boolean isValid = true;
 			ArrayList<Products> products = productsDB.getAllProducts(v.getID());
 			String partNumber = "";
 			do {
-				partNumber = Validator.getString(sc, "Enter code: ");
+				partNumber = Validator.getString(sc, "Enter partnumber: ");
 				for (Products p : products) {
 					if (partNumber.equalsIgnoreCase(p.getPartNumber())) {
 						System.out.println("Error! Code must be unique.");
@@ -255,10 +248,10 @@ public class MainPagePresentation {
 					}
 				}
 			} while (isValid == false);
-			String name = Validator.getString(sc, "Enter name: ", 10);
+			String name = Validator.getStringWithinLength(sc, "Enter name: ", 10);
 			double price = Validator.getDouble(sc, "Enter price: ", 0, 1000000000);
-			String unit = Validator.getString(sc, "Enter unit: ", 10);
-			String photoPath = Validator.getString(sc, "Enter photopath: ");
+			String unit = Validator.getStringWithinLength(sc, "Enter unit: ", 10);
+			String photoPath = Validator.getStringWithinLength(sc, "Enter photopath: ",255);
 			int vendorID = v.getID();
 			product.setName(name);
 			product.setPrice(price);
@@ -267,6 +260,7 @@ public class MainPagePresentation {
 			product.setPhotoPath(photoPath);
 			product.setVendorID(vendorID);
 			productsDB.addProduct(product);
+			adminFunctions(u);
 			
 		} catch (DBException e) {
 			e.printStackTrace();
@@ -438,7 +432,6 @@ public class MainPagePresentation {
 			for(Vendors vendor: vendors){
 				if(vendor.getCode().equalsIgnoreCase(choice)){
 					v = vendor;
-					System.out.println(v.getCode());
 					isValid = true;
 				}
 			}
@@ -454,7 +447,7 @@ public class MainPagePresentation {
 	}
 		
 	private static void manageRequest(Users u) {
-		viewRequests(u);
+		viewRequests(u,false);
 		try {
 			ArrayList<Requests> itemRequests = requestsDB.getAllRequests();
 			int choice = Validator.getInt(sc, "Enter request to affect: ", 0, itemRequests.size()+1);
@@ -465,17 +458,17 @@ public class MainPagePresentation {
 					requestsDB.updateRequest(r);
 				}
 			}
-			managerFunctions(u);
 		} catch (DBException e) {
 			e.printStackTrace();
 		}
+		managerFunctions(u);
 	}
 
 	private static void employeeFunctions(Users u) {
 		viewEmployeeMenu();
 		String choice = Validator.getString(sc, "Enter function: ");
 		if (choice.equalsIgnoreCase("view"))
-			viewRequests(u);
+			viewRequests(u, true);
 		else if (choice.equalsIgnoreCase("create"))
 			createRequest(u);
 		else if (choice.equalsIgnoreCase("help"))
@@ -528,6 +521,7 @@ public class MainPagePresentation {
 		total += q*p.getPrice();
 		}while(choice.equalsIgnoreCase("y")||choice.equalsIgnoreCase("yes"));
 		try {
+			r.setTotal(total);
 			if(total<50||v.isPreapproved())
 				r.setStatus("approved");
 			else
@@ -602,7 +596,7 @@ public class MainPagePresentation {
 		System.out.println("back\t\t-Go back to the previous menu\n");
 	}
 	
-	private static void viewRequests(Users u) {
+	private static void viewRequests(Users u, boolean isValid) {
 		ArrayList<Requests> itemRequests = new ArrayList<>();
 		ArrayList<LineItems> lineItemRequests = new ArrayList<>();
 		try {
@@ -632,7 +626,7 @@ public class MainPagePresentation {
 				System.out.println("Status: "+r.getStatus());
 				System.out.println("Total: "+currency.format(r.getTotal())+"\n");
 			}
-			if (u.getRole().equals("Manager")) {
+			if (u.getRole().equals("Manager")&& isValid == true) {
 				managerFunctions(u);
 			} else if (u.getRole().equals("Employee")) {
 				employeeFunctions(u);
@@ -661,48 +655,49 @@ public class MainPagePresentation {
 	private static void viewAdminMenu(){
 		System.out.println("Functions for administrator");
 		System.out.println("vendors\t\t-Access information of vendors");
-		System.out.println("products\t\t-Access information of products");
+		System.out.println("products\t-Access information of products");
 		System.out.println("users\t\t-Access information of users");
 		System.out.println("help\t\t-Display this menu");
 		System.out.append("exit\t\t-Exit this menu\n");;
 	}
 	
-	private static Users isValidUsername(String username, String password){
+	private static Users isValidUsername() {
 		ArrayList<Users> allUsers = null;
-		int roleID = -1;
 		Users user = null;
-		try{
+		try {
 			allUsers = usersDB.getAllUsers();
-		} catch (DBException e){
+			if (allUsers == null)
+				System.out.println("ERROR! Unable to get users!");
+			else {
+				boolean isValid = false;
+				do {
+					String username = Validator.getStringWithinLength(sc, "Enter username: ", 20);
+					for (Users u : allUsers) {
+						if (u.getUsername().equals(username)) {
+							isValidPassword(u);
+							isValid = true;
+							user = u;
+						}
+					}
+					if(isValid == false)
+						System.out.println("Error! Invalid username.");
+				} while (isValid == false);
+			}
+		} catch (DBException e) {
 			System.out.println(e + "\n");
 		}
-		if (allUsers == null)
-			System.out.println("ERROR! Unable to get users!");
-		else{
-			for(Users u: allUsers){
-				if(u.getUsername().equals(username))
-					roleID = isValidPassword(u, password);
-					user = u;
-			}
-		}
-		if(roleID==-1){
-			System.out.println("Error! Invalid username.");
-			return null;
-		}
-		else if(roleID == 0){
-			System.out.println("Error! Wrong password.");
-			return null;
-		}
-		else
-			return user; 
+		return user;
 	}
 	
-	private static int isValidPassword(Users user, String password){
-		if(user.getPassword().equals(password)){
-			return user.getRoleID();
-		}
-		else{
-			return 0;
+	private static void isValidPassword(Users user){
+		boolean isValid = false;
+		String password = "";
+		while(isValid == false){
+			password = Validator.getStringWithinLength(sc, "Enter password: ", 15);
+			if(user.getPassword().equals(password))
+				isValid = true;
+			else
+				System.out.println("Error! Wrong password");
 		}
 	}
 }

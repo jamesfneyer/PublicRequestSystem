@@ -78,7 +78,7 @@ public class ProductsDB implements ProductsDAO {
 	}
 	
 	public void updateProduct(Products product) throws DBException{
-		String sql = "INSERT INTO Products "
+		String sql = "UPDATE Products SET "
 				+ "Name = ? "
 				+ "Price = ? "
 				+ "Unit = ? "

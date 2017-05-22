@@ -127,11 +127,14 @@ public class RequestsDB implements RequestsDAO {
 	}
 
 	public void updateRequest(Requests request) throws DBException {
-		String sql = "UPDATE Requests SET " + "Status = ? " + "Where ID = ?";
+		String sql = "UPDATE Requests SET "
+				+ "Status = ? " 
+				+ "Where ID = ?;";
 		connection = DBUtil.getConnection();
 		try (PreparedStatement ps = connection.prepareStatement(sql)) {
 			ps.setString(1, request.getStatus());
 			ps.setInt(2, request.getID());
+			ps.executeUpdate();
 		} catch (SQLException e) {
 			throw new DBException(e);
 		}
