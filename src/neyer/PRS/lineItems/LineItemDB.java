@@ -7,11 +7,10 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 
 import neyer.PRS.business.LineItems;
-import neyer.PRS.dbutils.DBException;
-import neyer.PRS.dbutils.DBUtil;
+import neyer.PRS.dbutils.*;
 
 public class LineItemDB implements LineItemDAO {
-	static Connection connection;
+	Connection connection;
 
 	public LineItemDB() {
 

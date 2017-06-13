@@ -1,6 +1,5 @@
 package neyer.PRS.presentation;
 
-import java.sql.Date;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -52,6 +51,7 @@ public class MainPagePresentation {
 
 	}
 	
+	//Main page for manager, sends them to their possible locations
 	private static void managerFunctions(Users u) {
 		viewManagerMenu();
 		String choice = Validator.getString(sc, "Enter function: ");
@@ -70,6 +70,7 @@ public class MainPagePresentation {
 		
 	}
 
+	//main page for admins, sends them to the next stage
 	private static void adminFunctions(Users u) {
 		viewAdminMenu();
 		String choice = Validator.getString(sc, "Enter function: ");
@@ -89,11 +90,14 @@ public class MainPagePresentation {
 		}
 	}
 
+	//vendor page for admins, allows them to affect the Vendors table in the DB
 	private static void vendorOptions(Users u) {
 		vendorFunctions();
 		String choice = Validator.getString(sc, "Enter function: ");
-		if(choice.equalsIgnoreCase("view"))
+		if(choice.equalsIgnoreCase("view")){
 			viewVendors();
+			vendorOptions(u);
+		}
 		else if(choice.equalsIgnoreCase("add"))
 			addVendor(u);
 		else if(choice.equalsIgnoreCase("update"))
@@ -108,6 +112,7 @@ public class MainPagePresentation {
 		}
 	}
 
+	//adds a vendor to the DB, requires a unique code
 	private static void addVendor(Users u) {
 		Vendors vendor = new Vendors();
 		try{
@@ -152,6 +157,7 @@ public class MainPagePresentation {
 		}
 	}
 
+	//allows an admin to update the vendors information. Everything but the unique identifier code can be changed
 	private static void updateVendor(Users u) {
 		Vendors vendor = new Vendors();
 		try {
@@ -188,6 +194,7 @@ public class MainPagePresentation {
 
 	}
 
+	//product page for admins, allows them to affect the Products table in the DB
 	private static void productOptions(Users u) {
 		productFunctions();
 		String choice = Validator.getString(sc, "Enter function: ");
@@ -211,6 +218,7 @@ public class MainPagePresentation {
 		}
 	}
 
+	//allows an admin to update a products information, the product to be updated is passed into it
 	private static void updateProduct(Products p, Vendors v, Users u) {
 		Products product = p;
 		try{
@@ -233,6 +241,7 @@ public class MainPagePresentation {
 		
 	}
 
+	//Allows an admin to add a product to the DB, makes sure that the partnumber is unique
 	private static void addProduct(Vendors v, Users u) {
 		Products product = new Products();
 		try{
@@ -243,7 +252,7 @@ public class MainPagePresentation {
 				partNumber = Validator.getString(sc, "Enter partnumber: ");
 				for (Products p : products) {
 					if (partNumber.equalsIgnoreCase(p.getPartNumber())) {
-						System.out.println("Error! Code must be unique.");
+						System.out.println("Error! Partnumber must be unique.");
 						isValid = false;
 					}
 				}
@@ -267,15 +276,18 @@ public class MainPagePresentation {
 		}
 	}
 
+	//user page for admins, allows them to affect the Users table in the DB
 	private static void usersOptions(Users u) {
 		usersFunctions();
 		String choice = Validator.getString(sc, "Enter function: ");
-		if(choice.equalsIgnoreCase("view"))
+		if(choice.equalsIgnoreCase("view")){
 			viewUsers();
+			usersOptions(u);
+		}
 		else if(choice.equalsIgnoreCase("add"))
-			addUser();
+			addUser(u);
 		else if(choice.equalsIgnoreCase("update"))
-			updateUser();
+			updateUser(u);
 		else if(choice.equals("help"))
 			usersFunctions();
 		else if(choice.equalsIgnoreCase("back"))
@@ -287,7 +299,8 @@ public class MainPagePresentation {
 		
 	}
 	
-	private static void updateUser() {
+	//Allows an admin to update the users' information, after obtaining a valid usernames
+	private static void updateUser(Users u) {
 		Users user = new Users();
 		try {
 			boolean isValid = true;
@@ -322,6 +335,7 @@ public class MainPagePresentation {
 			user.setEmail(email);
 			user.setRoleID(roleID);
 			usersDB.updateUser(user);
+			usersOptions(u);
 
 		} catch (DBException e) {
 			e.printStackTrace();
@@ -329,7 +343,8 @@ public class MainPagePresentation {
 
 	}
 
-	private static void addUser() {
+	//Allows an admin to add a user to the DB, requires a unique username
+	private static void addUser(Users use) {
 		Users user = new Users();
 		try{
 			boolean isValid = true;
@@ -363,6 +378,7 @@ public class MainPagePresentation {
 			user.setEmail(email);
 			user.setRoleID(roleID);
 			usersDB.addUser(user);
+			usersOptions(use);
 			
 		} catch (DBException e) {
 			e.printStackTrace();
@@ -370,6 +386,7 @@ public class MainPagePresentation {
 		
 	}
 
+	//Display menu for an admin's user functions
 	private static void usersFunctions(){
 		System.out.println("Admin users functions: ");
 		System.out.println("view\t\t-View users");
@@ -379,6 +396,7 @@ public class MainPagePresentation {
 		System.out.println("back\t\t-Go back to the previous menu\n");
 	}
 
+	//Shows all the Vendors in the Vendors DB
 	private static void viewVendors(){
 		try {
 			ArrayList<Vendors> vendors = vendorsDB.getAllVendors();
@@ -400,7 +418,8 @@ public class MainPagePresentation {
 			e.printStackTrace();
 		}
 	}
-	
+
+	//Shows all the Users in the Users DB
 	private static void viewUsers(){
 		try {
 			ArrayList<Users> users = usersDB.getAllUsers();
@@ -424,17 +443,11 @@ public class MainPagePresentation {
 	private static Vendors selectVendor(){
 		Vendors v = new Vendors();
 		try {
-			ArrayList<Vendors> vendors = vendorsDB.getAllVendors();
 			viewVendors();
 			boolean isValid = false;
 			while(isValid == false){
 			String choice = Validator.getLine(sc, "Enter code: ");
-			for(Vendors vendor: vendors){
-				if(vendor.getCode().equalsIgnoreCase(choice)){
-					v = vendor;
-					isValid = true;
-				}
-			}
+			v = vendorsDB.getVendor(choice);
 			if(isValid == false)
 				System.out.println("Error! Invalid code.");
 			}
@@ -662,6 +675,34 @@ public class MainPagePresentation {
 	}
 	
 	private static Users isValidUsername() {
+		Users user = null;
+		try {
+			String username = Validator.getStringWithinLength(sc, "Enter username: ", 20);
+			String password = "";
+			user = usersDB.getUser(username);
+			boolean isValid = false;
+			while(isValid == false){
+			if(user !=null){
+				password = Validator.getStringWithinLength(sc, "Enter password: ", 15);
+
+				if (!user.getPassword().equals(password)){
+					System.out.println("Error! Invalid passwordd");
+				}
+				else
+					isValid = true;
+			}
+			else{
+				System.out.println("Error! Invalid username");
+				isValidUsername();
+			}
+			}
+		} catch (DBException e) {
+			System.out.println(e + "\n");
+		}
+		return user;
+	}
+	
+/*	private static Users isValidUsername() {
 		ArrayList<Users> allUsers = null;
 		Users user = null;
 		try {
@@ -699,5 +740,5 @@ public class MainPagePresentation {
 			else
 				System.out.println("Error! Wrong password");
 		}
-	}
+	}*/
 }

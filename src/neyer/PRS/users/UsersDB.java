@@ -59,25 +59,19 @@ public class UsersDB implements UsersDAO {
 	}
 
 	public Users getUser(String username) throws DBException {
-		String sql = "select u.ID, Username, Password, FirstName, LastName, Phone, Email, r.Code "
-				+ "from Users u, Role r " + "where u.RoleID = r.ID " + "and Username = ?; ";
+		String sql = "select u.ID, Username, Password, FirstName, LastName, Phone, Email, RoleID, r.Code "
+				+ "from Users u, Role r " 
+				+ "where u.RoleID = r.ID " 
+				+ "and Username = ?; ";
 		connection = DBUtil.getConnection();
 		Users u = null;
-		try (PreparedStatement ps = connection.prepareStatement(sql); ResultSet rs = ps.executeQuery()) {
-			ArrayList<Users> users = getAllUsers();
-			for (Users a : users) {
-				if (username.equalsIgnoreCase(a.getUsername())) {
-					ps.setString(1, username);
-					if (rs.next()) {
-						u = getUserFromRow(rs);
-						rs.close();
-					} else {
-						rs.close();
-					}
-				} else {
-					rs.close();
-				}
+		try (PreparedStatement ps = connection.prepareStatement(sql)) {
+			ps.setString(1, username);
+			ResultSet rs = ps.executeQuery();
+			if(rs.next()){
+			u = getUserFromRow(rs);
 			}
+			rs.close();
 			return u;
 		} catch (SQLException e) {
 			throw new DBException(e);
@@ -90,7 +84,6 @@ public class UsersDB implements UsersDAO {
 		try {
 			users = getAllUsers();
 		} catch (DBException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		String fullName = "";
@@ -110,6 +103,7 @@ public class UsersDB implements UsersDAO {
 			for (Users a : users) {
 				if (username.equalsIgnoreCase(a.getUsername())) {
 					ps.setString(1, username);
+					ps.executeUpdate();
 					ResultSet rs = ps.executeQuery();
 					if (rs.next()) {
 						p = rs.getInt("ID");
@@ -134,6 +128,7 @@ public class UsersDB implements UsersDAO {
 		int p = 0;
 		try (PreparedStatement ps = connection.prepareStatement(sql)) {
 			ps.setString(1, role);
+			ps.executeUpdate();
 			ResultSet rs = ps.executeQuery();
 			if (rs.next()) {
 				p = rs.getInt("ID");
@@ -151,8 +146,15 @@ public class UsersDB implements UsersDAO {
 	}
 
 	public void updateUser(Users user) throws DBException {
-		String sql = "INSERT INTO Users " + "FirstName = ? " + "Password = ? " + "LastName = ? " + "Phone = ? "
-				+ "Email = ? " + "RoleID = ? " + "WHERE " + "Username = ? ";
+		String sql = "UPDATE Users SET " 
+				+ "FirstName = ? " 
+				+ "Password = ? " 
+				+ "LastName = ? " 
+				+ "Phone = ? "
+				+ "Email = ? " 
+				+ "RoleID = ? " 
+				+ "WHERE " 
+				+ "Username = ?;";
 		connection = DBUtil.getConnection();
 		try (PreparedStatement ps = connection.prepareStatement(sql)) {
 			ps.setString(1, user.getFirstName());

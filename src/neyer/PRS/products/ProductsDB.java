@@ -12,7 +12,7 @@ import neyer.PRS.dbutils.DBException;
 import neyer.PRS.dbutils.DBUtil;
 
 public class ProductsDB implements ProductsDAO {
-	static Connection connection;
+	Connection connection;
 
 	public ProductsDB() {
 	}
